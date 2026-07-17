@@ -1,6 +1,7 @@
 # Ignore data directory completely except the summary folder
 data/
 !data/summary/
+venv/
 
 # Ignore massive files globally just in case
 *.csv
