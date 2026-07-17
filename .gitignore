@@ -1,0 +1,17 @@
+# Ignore data directory completely except the summary folder
+data/
+!data/summary/
+
+# Ignore massive files globally just in case
+*.csv
+*.json
+*.parquet
+*.tsv
+*.zip
+*.tar.gz
+
+# Ignore IDE and system configs
+.vscode/
+.DS_Store
+__pycache__/
+*.log
