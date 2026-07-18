@@ -1,0 +1,83 @@
+services:
+  # ----------------------------------------
+  # YOUR CUSTOM WORKSPACE
+  # ----------------------------------------
+  pyspark-workspace:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: big_data_workspace
+    ports:
+      - "8888:8888" 
+      - "4040:4040" 
+    volumes:
+      - .:/app
+    environment:
+      - GRANT_SUDO=yes
+
+  # ----------------------------------------
+  # HADOOP HDFS CLUSTER
+  # ----------------------------------------
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-namenode
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=data-cluster
+    volumes:
+      - namenode_data:/hadoop/dfs/name
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: hadoop-datanode
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+    depends_on:
+      - namenode
+
+  # ----------------------------------------
+  # APACHE SPARK CLUSTER (BDE Unified)
+  # ----------------------------------------
+  spark-master:
+    image: bde2020/spark-master:3.2.1-hadoop3.2
+    container_name: spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+
+  spark-worker:
+    image: bde2020/spark-worker:3.2.1-hadoop3.2
+    container_name: spark-worker
+    environment:
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+    depends_on:
+      - spark-master
+
+  # ----------------------------------------
+  # APACHE HIVE & METASTORE
+  # ----------------------------------------
+  hive-metastore:
+    image: bde2020/hive-metastore-postgresql:2.3.0
+    container_name: hive-metastore
+    depends_on:
+      - namenode
+      - datanode
+
+  hive-server:
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    container_name: hive-server
+    environment:
+      - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore:5432/metastore
+      - SERVICE_PRECONDITION=hive-metastore:5432
+    ports:
+      - "10000:10000" 
+    depends_on:
+      - namenode
+      - datanode
+      - hive-metastore
+
+volumes:
+  namenode_data:
