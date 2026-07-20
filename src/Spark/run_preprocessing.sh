@@ -6,14 +6,11 @@ echo "🧹 Starting InstaCart Preprocessing Phase..."
 echo "========================================"
 
 # --- Config -------------------------------------------------------------
-# Docker container that has spark-submit on its PATH and network access
-# to hadoop-namenode. Adjust SPARK_CONTAINER to match your docker-compose
-# service name (e.g. "spark-master", "spark-client", "hadoop-namenode" if
-# Spark is co-located with HDFS).
-SPARK_CONTAINER="spark-master"
+# Use the PySpark workspace container to run spark-submit
+SPARK_CONTAINER="big_data_workspace"
 
 # Local path (on the host) to the pipeline script
-LOCAL_SCRIPT_DIR="/home/pop/Big_data_project/pyspark"
+LOCAL_SCRIPT_DIR="/home/pop/Big_data_project/src/Spark"
 LOCAL_SCRIPT="$LOCAL_SCRIPT_DIR/instacart_cleaning_pipeline.py"
 
 # Path to copy/run the script from inside the container
@@ -21,7 +18,7 @@ CONTAINER_SCRIPT_DIR="/tmp"
 CONTAINER_SCRIPT="$CONTAINER_SCRIPT_DIR/instacart_cleaning_pipeline.py"
 
 # Spark resource settings — tune to your cluster
-SPARK_MASTER_URL="local[*]"
+SPARK_MASTER_URL="spark://spark-master:7077"
 DRIVER_MEMORY="4g"
 EXECUTOR_MEMORY="4g"
 
