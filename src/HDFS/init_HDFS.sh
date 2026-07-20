@@ -12,7 +12,7 @@ docker exec hadoop-namenode hdfs dfs -mkdir -p /user/project/data/preprocessed
 echo "[2/3] Transferring and Uploading files to HDFS..."
 
 # 2. Use the absolute path to your data folder to prevent directory errors
-RAW_DATA_DIR="/home/omar-hazem/projects/Big_data/data/raw"
+RAW_DATA_DIR="/home/pop/Big_data_project/data/raw"
 
 for FILE_PATH in "$RAW_DATA_DIR"/*.csv; do
     # Extract just the filename from the full path
