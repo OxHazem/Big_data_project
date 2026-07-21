@@ -34,7 +34,7 @@ SPARK_MASTER_CONTAINER="spark-master"
 
 # Path to preprocess.py inside the workspace container.
 # The project root is mounted at /app  (volumes: .:/app in docker-compose.yml)
-PREPROCESS_SCRIPT="/app/src /spark/preprocess.py"
+PREPROCESS_SCRIPT="/app/src/spark/preprocess.py"
 
 # spark-submit resource settings
 # NOTE: We use local[*] instead of spark://spark-master:7077 because the
