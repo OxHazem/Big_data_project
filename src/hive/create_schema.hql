@@ -39,7 +39,7 @@ CREATE EXTERNAL TABLE IF NOT EXISTS orders (
     order_number INT,
     order_dow SMALLINT,
     order_hour_of_day SMALLINT,
-    days_since_prior_order FLOAT,
+    days_since_prior_order DOUBLE,
     is_first_order BOOLEAN,
     days_capped BOOLEAN,
     same_day_reorder BOOLEAN,
