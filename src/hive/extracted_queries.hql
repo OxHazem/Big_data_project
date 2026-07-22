@@ -55,14 +55,33 @@ ORDER BY metric_value DESC
 LIMIT 10;
 
 -- 9. Order Frequency: Distribution of days since prior order
-SELECT 'Days_Since_Prior_Order' AS query_name, CAST(days_since_prior_order AS STRING) AS category, COUNT(1) AS metric_value
+--    Fix: exclude first orders (is_first_order=true) where PySpark filled the null with 0.0
+--    Fix: label the 30.0 cap artifact separately so it is not mistaken for real behavior
+SELECT 'Days_Since_Prior_Order' AS query_name,
+    CASE
+        WHEN days_capped = true THEN '30+ (capped)'
+        ELSE CAST(CAST(days_since_prior_order AS INT) AS STRING)
+    END AS category,
+    COUNT(1) AS metric_value
 FROM orders
-WHERE days_since_prior_order IS NOT NULL
-GROUP BY days_since_prior_order;
+WHERE is_first_order = false
+GROUP BY
+    CASE
+        WHEN days_capped = true THEN '30+ (capped)'
+        ELSE CAST(CAST(days_since_prior_order AS INT) AS STRING)
+    END;
 
--- 10. Top 10 Users: Users with the highest number of orders
-SELECT 'Top_10_Users' AS query_name, CAST(user_id AS STRING) AS category, COUNT(order_id) AS metric_value
-FROM orders
-GROUP BY user_id
-ORDER BY metric_value DESC
-LIMIT 10;
+-- 10. User Engagement Distribution: how many users have each order count
+--     Fix: the old query returned 10 users all tied at 100 (the dataset's artificial cap)
+--     This version shows the real spread of engagement across all 206,209 users
+SELECT 'User_Order_Distribution' AS query_name,
+    CAST(total_orders AS STRING) AS category,
+    COUNT(user_id) AS metric_value
+FROM (
+    SELECT user_id, COUNT(order_id) AS total_orders
+    FROM orders
+    WHERE eval_set = 'prior'
+    GROUP BY user_id
+) user_counts
+GROUP BY total_orders
+ORDER BY total_orders;

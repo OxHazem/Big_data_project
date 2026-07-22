@@ -74,8 +74,8 @@ declare -a QUERIES=(
     "Top_10_Aisles|SELECT a.aisle AS category, COUNT(op.product_id) AS metric_value FROM order_products_prior op JOIN products p ON op.product_id = p.product_id JOIN aisles a ON p.aisle_id = a.aisle_id GROUP BY a.aisle ORDER BY metric_value DESC LIMIT 10"
     "Reorder_Ratio_Aisle|SELECT a.aisle AS category, ROUND(SUM(CAST(op.reordered AS DOUBLE)) / COUNT(op.product_id), 4) AS metric_value FROM order_products_prior op JOIN products p ON op.product_id = p.product_id JOIN aisles a ON p.aisle_id = a.aisle_id GROUP BY a.aisle ORDER BY metric_value DESC"
     "Top_Reordered_Products|SELECT p.product_name AS category, SUM(op.reordered) AS metric_value FROM order_products_prior op JOIN products p ON op.product_id = p.product_id GROUP BY p.product_name ORDER BY metric_value DESC LIMIT 10"
-    "Days_Since_Prior_Order|SELECT CAST(days_since_prior_order AS STRING) AS category, COUNT(1) AS metric_value FROM orders WHERE days_since_prior_order IS NOT NULL GROUP BY days_since_prior_order ORDER BY CAST(category AS FLOAT)"
-    "Top_10_Users|SELECT CAST(user_id AS STRING) AS category, COUNT(order_id) AS metric_value FROM orders GROUP BY user_id ORDER BY metric_value DESC LIMIT 10"
+    "Days_Since_Prior_Order|SELECT CASE WHEN days_capped = true THEN '30+ (capped)' ELSE CAST(CAST(days_since_prior_order AS INT) AS STRING) END AS category, COUNT(1) AS metric_value FROM orders WHERE is_first_order = false GROUP BY CASE WHEN days_capped = true THEN '30+ (capped)' ELSE CAST(CAST(days_since_prior_order AS INT) AS STRING) END"
+    "User_Order_Distribution|SELECT CAST(total_orders AS STRING) AS category, COUNT(user_id) AS metric_value FROM (SELECT user_id, COUNT(order_id) AS total_orders FROM orders WHERE eval_set = 'prior' GROUP BY user_id) user_counts GROUP BY total_orders ORDER BY CAST(category AS INT)"
 )
 
 # ── Run each query ────────────────────────────────────────────────────────────
