@@ -1,8 +1,6 @@
--- Create and select the database namespace
 CREATE DATABASE IF NOT EXISTS instacart;
 USE instacart;
 
--- Table 1: Aisles
 CREATE EXTERNAL TABLE IF NOT EXISTS aisles (
     aisle_id INT,
     aisle STRING
@@ -10,7 +8,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS aisles (
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/user/project/data/preprocessed/aisles';
 
--- Table 2: Departments
 CREATE EXTERNAL TABLE IF NOT EXISTS departments (
     department_id INT,
     department STRING
@@ -18,7 +15,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS departments (
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/user/project/data/preprocessed/departments';
 
--- Table 3: Products (includes your custom cold-start flags)
 CREATE EXTERNAL TABLE IF NOT EXISTS products (
     product_id INT,
     product_name STRING,
@@ -32,7 +28,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS products (
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/user/project/data/preprocessed/products';
 
--- Table 4: Orders (Partitioned by eval_set just like your Spark output)
 CREATE EXTERNAL TABLE IF NOT EXISTS orders (
     order_id INT,
     user_id INT,
@@ -50,10 +45,8 @@ PARTITIONED BY (eval_set STRING)
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/user/project/data/preprocessed/orders';
 
--- Force Hive to scan HDFS and detect the partition subfolders
 MSCK REPAIR TABLE orders;
 
--- Table 5: Order Products Prior
 CREATE EXTERNAL TABLE IF NOT EXISTS order_products_prior (
     order_id INT,
     product_id INT,
@@ -67,7 +60,6 @@ CREATE EXTERNAL TABLE IF NOT EXISTS order_products_prior (
 STORED AS PARQUET
 LOCATION 'hdfs://namenode:9000/user/project/data/preprocessed/order_products_prior';
 
--- Table 6: Order Products Train
 CREATE EXTERNAL TABLE IF NOT EXISTS order_products_train (
     order_id INT,
     product_id INT,

@@ -3,16 +3,14 @@ import pandas as pd
 import plotly.express as px
 import os
 
-# --- PAGE CONFIG ---
+
 st.set_page_config(page_title="Instacart Market Basket Analysis", layout="wide", page_icon="🛒")
 
 st.title("🛒 Instacart Market Basket Analysis Dashboard")
 st.markdown("This dashboard visualizes insights from the Instacart dataset, highlighting purchasing behaviors, popular items, and user engagement.")
 
-# --- DATA LOADING ---
 @st.cache_data
 def load_data(filename):
-    # Determine absolute path to data directory
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     data_path = os.path.join(base_dir, "data", "summary", filename)
     if os.path.exists(data_path):
@@ -21,7 +19,6 @@ def load_data(filename):
         st.error(f"Data file not found: {data_path}")
         return pd.DataFrame()
 
-# Load all summary CSVs
 df_busiest_hours = load_data("Busiest_Hours.csv")
 df_busiest_days = load_data("Busiest_Days.csv")
 df_top_products = load_data("Top_10_Products.csv")
@@ -33,7 +30,7 @@ df_top_reordered = load_data("Top_Reordered_Products.csv")
 df_days_prior = load_data("Days_Since_Prior_Order.csv")
 df_user_dist = load_data("User_Order_Distribution.csv")
 
-# --- TABS LAYOUT ---
+
 tab1, tab2, tab3, tab4 = st.tabs([
     "📅 Temporal Analysis", 
     "🛍️ Product & Category", 
@@ -41,9 +38,7 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "👥 User Engagement"
 ])
 
-# ==========================================
-# TAB 1: TEMPORAL ANALYSIS
-# ==========================================
+
 with tab1:
     st.header("When do people order?")
     col1, col2 = st.columns(2)
@@ -51,7 +46,6 @@ with tab1:
     with col1:
         if not df_busiest_hours.empty:
             st.subheader("Busiest Hours of the Day")
-            # Sort chronologically
             df_busiest_hours['category'] = df_busiest_hours['category'].astype(int)
             df_busiest_hours = df_busiest_hours.sort_values('category')
             fig_hours = px.line(
@@ -65,7 +59,6 @@ with tab1:
     with col2:
         if not df_busiest_days.empty:
             st.subheader("Busiest Days of the Week")
-            # Map day integers to actual days (assuming 0=Sunday, 1=Monday based on EDA)
             day_map = {0: "Sunday", 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"}
             df_busiest_days['category_int'] = df_busiest_days['category'].astype(int)
             df_busiest_days = df_busiest_days.sort_values('category_int')
@@ -78,9 +71,7 @@ with tab1:
             )
             st.plotly_chart(fig_days, width='stretch')
 
-# ==========================================
-# TAB 2: PRODUCT & CATEGORY
-# ==========================================
+
 with tab2:
     st.header("What do people buy?")
     col1, col2 = st.columns(2)
@@ -108,7 +99,6 @@ with tab2:
     with col2:
         if not df_top_dept.empty:
             st.subheader("Sales by Department")
-            # Use a Treemap for departments to show relative sizes well
             fig_dept = px.treemap(
                 df_top_dept, path=['category'], values='metric_value',
                 labels={'category': 'Department', 'metric_value': 'Purchases'},
@@ -116,9 +106,6 @@ with tab2:
             )
             st.plotly_chart(fig_dept, width='stretch')
 
-# ==========================================
-# TAB 3: REORDER BEHAVIOR
-# ==========================================
 with tab3:
     st.header("Habitual vs. Exploratory Purchasing")
     
@@ -148,7 +135,6 @@ with tab3:
         if not df_reorder_aisle.empty:
             st.subheader("Top & Bottom Aisles by Reorder Ratio")
             df_reorder_aisle = df_reorder_aisle.sort_values('metric_value', ascending=False)
-            # Show top 10 and bottom 5 for contrast
             top_10 = df_reorder_aisle.head(10)
             bottom_5 = df_reorder_aisle.tail(5)
             combined_aisles = pd.concat([top_10, bottom_5]).sort_values('metric_value', ascending=True)
@@ -161,9 +147,6 @@ with tab3:
             fig_reorder_aisle.update_xaxes(tickformat=".0%")
             st.plotly_chart(fig_reorder_aisle, width='stretch')
 
-# ==========================================
-# TAB 4: USER ENGAGEMENT
-# ==========================================
 with tab4:
     st.header("How engaged are users?")
     col1, col2 = st.columns(2)
@@ -172,7 +155,6 @@ with tab4:
         if not df_days_prior.empty:
             st.subheader("Days Since Prior Order")
             st.markdown("Shows how long users wait before reordering. Note the weekly spikes (7, 14, 21, 28 days) and the 30+ day cap.")
-            # Ensure "30+ (capped)" is sorted at the end
             def sort_days(x):
                 if '30+' in str(x): return 999
                 try: return float(x)

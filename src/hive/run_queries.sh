@@ -1,14 +1,7 @@
 #!/bin/bash
-# =============================================================================
-# run_queries.sh
-# Runs each extracted Hive query and exports the results as CSV files
-# into data/summary/ on the host machine.
-# Each query produces: data/summary/<QueryName>.csv
-# =============================================================================
 
 set -uo pipefail
 
-# ── Colors ────────────────────────────────────────────────────────────────────
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 RED='\033[0;31m'
@@ -20,7 +13,6 @@ success() { echo -e "${GREEN}[OK]${RESET}    $*"; }
 warn()    { echo -e "${YELLOW}[WARN]${RESET}  $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; exit 1; }
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 SUMMARY_DIR="$PROJECT_ROOT/data/summary"
@@ -32,7 +24,6 @@ echo -e "${CYAN}📊 Hive Query Export to CSV${RESET}"
 echo -e "${CYAN}========================================${RESET}"
 echo ""
 
-# ── Preflight checks ──────────────────────────────────────────────────────────
 info "Checking if $CONTAINER_NAME is running..."
 if ! docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -q "true"; then
     error "Container '$CONTAINER_NAME' is not running. Start with: docker compose up -d hive-server"
@@ -61,10 +52,6 @@ mkdir -p "$SUMMARY_DIR"
 success "Output directory: $SUMMARY_DIR"
 echo ""
 
-# ── Query definitions ─────────────────────────────────────────────────────────
-# Format: "Filename|HQL"
-# NOTE: ORDER BY must use aliases (category/metric_value) because Hive
-#       resolves ORDER BY in the outer scope where original col names are gone.
 declare -a QUERIES=(
     "Busiest_Hours|SELECT CAST(order_hour_of_day AS STRING) AS category, COUNT(1) AS metric_value FROM orders GROUP BY order_hour_of_day ORDER BY category"
     "Busiest_Days|SELECT CAST(order_dow AS STRING) AS category, COUNT(1) AS metric_value FROM orders GROUP BY order_dow ORDER BY category"
@@ -78,7 +65,6 @@ declare -a QUERIES=(
     "User_Order_Distribution|SELECT CAST(total_orders AS STRING) AS category, COUNT(user_id) AS metric_value FROM (SELECT user_id, COUNT(order_id) AS total_orders FROM orders WHERE eval_set = 'prior' GROUP BY user_id) user_counts GROUP BY total_orders ORDER BY CAST(category AS INT)"
 )
 
-# ── Run each query ────────────────────────────────────────────────────────────
 PASS=0
 FAIL=0
 FAILED_QUERIES=()
@@ -102,12 +88,6 @@ for entry in "${QUERIES[@]}"; do
         -u "$JDBC_URL" \
         -e "$HQL" 2>&1) || true
 
-    # Strip all non-data lines:
-    #   - SLF4J warnings
-    #   - Beeline connection banner lines
-    #   - Beeline prompt lines (e.g. "0: jdbc:hive2://...>")
-    #   - Error lines (captured separately for reporting)
-    #   - Blank lines
     CSV_OUTPUT=$(printf '%s\n' "$RAW_OUTPUT" \
         | grep -v '^SLF4J' \
         | grep -v '^Connecting' \
@@ -119,7 +99,6 @@ for entry in "${QUERIES[@]}"; do
         | grep -v '^[0-9]*: jdbc:' \
         | grep -v '^[[:space:]]*$') || true
 
-    # Check if there was an error in the raw output
     ERROR_LINE=$(printf '%s\n' "$RAW_OUTPUT" | grep -i 'Error:' | head -1) || true
 
     if [ -n "$ERROR_LINE" ]; then
@@ -140,7 +119,6 @@ for entry in "${QUERIES[@]}"; do
     fi
 done
 
-# ── Summary ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${CYAN}========================================${RESET}"
 echo -e "${GREEN}✅ Done: $PASS/$TOTAL queries exported${RESET}"
