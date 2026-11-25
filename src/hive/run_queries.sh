@@ -83,7 +83,7 @@ for entry in "${QUERIES[@]}"; do
     RAW_OUTPUT=$(docker exec "$CONTAINER_NAME" beeline \
         --silent=true \
         --outputformat=csv2 \
-        --showHeader=true \
+        --showHeader=false \
         --fastConnect=true \
         -u "$JDBC_URL" \
         -e "$HQL" 2>&1) || true
@@ -103,17 +103,17 @@ for entry in "${QUERIES[@]}"; do
 
     if [ -n "$ERROR_LINE" ]; then
         warn "[$NAME] ⚠  Query failed: $ERROR_LINE"
-        echo "category,metric_value" > "$OUT_FILE"
+        : > "$OUT_FILE"
         FAIL=$((FAIL + 1))
         FAILED_QUERIES+=("$NAME")
     elif [ -z "$CSV_OUTPUT" ]; then
         warn "[$NAME] ⚠  Query returned no data (table may be empty)"
-        echo "category,metric_value" > "$OUT_FILE"
+        : > "$OUT_FILE"
         FAIL=$((FAIL + 1))
         FAILED_QUERIES+=("$NAME")
     else
         printf '%s\n' "$CSV_OUTPUT" > "$OUT_FILE"
-        ROW_COUNT=$(printf '%s\n' "$CSV_OUTPUT" | tail -n +2 | wc -l)
+        ROW_COUNT=$(printf '%s\n' "$CSV_OUTPUT" | wc -l)
         success "[$NAME] ✅  $ROW_COUNT rows → ${NAME}.csv"
         PASS=$((PASS + 1))
     fi

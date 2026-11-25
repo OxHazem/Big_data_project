@@ -22,6 +22,9 @@ CREATE EXTERNAL TABLE IF NOT EXISTS products (
     department_id INT,
     aisle STRING,
     department STRING,
+    aisle_is_unknown BOOLEAN,
+    department_is_unknown BOOLEAN,
+    is_catalog_only_product BOOLEAN,
     has_train_label BOOLEAN,
     is_cold_start_product BOOLEAN
 )
